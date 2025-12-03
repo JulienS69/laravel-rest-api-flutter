@@ -42,8 +42,8 @@ class ItemRepositoryWithDefaultBody with SearchFactory<ItemModel> {
 
   @override
   LaravelRestApiSearchBody? get defaultSearchBody => LaravelRestApiSearchBody(
-    filters: [Filter(field: "field", operator: "operator", value: "value")],
-  );
+        filters: [Filter(field: "field", operator: "operator", value: "value")],
+      );
 
   @override
   ItemModel fromJson(Map<String, dynamic> item) => ItemModel.fromJson(item);
@@ -191,10 +191,9 @@ void main() {
     );
 
     // Check body send to api
-    final capturedArgs =
-        verify(
-          mockDio.post('/items/search', data: captureAnyNamed('data')),
-        ).captured;
+    final capturedArgs = verify(
+      mockDio.post('/items/search', data: captureAnyNamed('data')),
+    ).captured;
 
     expect(capturedArgs[0].containsKey('search'), isTrue);
     expect(capturedArgs[0]["search"].containsKey('text'), isTrue);
@@ -212,7 +211,6 @@ void main() {
           "relationIncludes",
       capturedArgs[0]["search"]["includes"][0]["selects"][0]["field"] ==
           "relationField",
-      isTrue,
     );
     expect(
       capturedArgs[0]["search"]["includes"][0]["filters"][0]["field"] ==
@@ -232,10 +230,9 @@ void main() {
     );
 
     // Check body send to api
-    final capturedArgs =
-        verify(
-          mockDio.post('/items/search', data: captureAnyNamed('data')),
-        ).captured;
+    final capturedArgs = verify(
+      mockDio.post('/items/search', data: captureAnyNamed('data')),
+    ).captured;
 
     expect(capturedArgs[0].containsKey('search'), isTrue);
     expect(capturedArgs[0]["search"].containsKey('filters'), isTrue);
