@@ -42,8 +42,8 @@ class ItemRepositoryWithDefaultBody with SearchFactory<ItemModel> {
 
   @override
   LaravelRestApiSearchBody? get defaultSearchBody => LaravelRestApiSearchBody(
-        filters: [Filter(field: "field", operator: "operator", value: "value")],
-      );
+    filters: [Filter(field: "field", operator: "operator", value: "value")],
+  );
 
   @override
   ItemModel fromJson(Map<String, dynamic> item) => ItemModel.fromJson(item);

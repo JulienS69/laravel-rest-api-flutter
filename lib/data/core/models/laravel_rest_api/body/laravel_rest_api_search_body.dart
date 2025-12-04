@@ -114,7 +114,13 @@ class Include {
   final List<Select>? selects;
   final int? limit;
 
-  Include({required this.relation, this.includes, this.filters,  this.selects, this.limit});
+  Include({
+    required this.relation,
+    this.includes,
+    this.filters,
+    this.selects,
+    this.limit,
+  });
 
   Map<String, dynamic> toJson() {
     return {
