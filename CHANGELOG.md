@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.1
+## 0.1.1
 
 Added support for gate responses returning either a boolean or detailed policy message.
 
