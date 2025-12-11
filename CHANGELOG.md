@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Make filter value nullable
+- Added scope parameter on include
+
 ## 0.1.1
 
 Added support for gate responses returning either a boolean or detailed policy message.
