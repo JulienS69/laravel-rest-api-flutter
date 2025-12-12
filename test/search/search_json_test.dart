@@ -7,20 +7,12 @@ void main() {
       final filter = Filter(field: 'status', value: null);
       final json = filter.toJson();
 
-      expect(
-        json.containsKey('value'),
-        isTrue,
-        reason: "La clé 'value' doit exister",
-      );
-      expect(
-        json['value'],
-        isNull,
-        reason: "La valeur doit être null explicitement",
-      );
+      expect(json.containsKey('value'), isTrue);
+      expect(json['value'], isNull);
     });
 
     test('Field: toJson sends explicit null for value', () {
-      final field = Field(name: 'desc', value: null);
+      final field = InstructionField(field: 'desc', value: null);
       final json = field.toJson();
 
       expect(json.containsKey('value'), isTrue);
@@ -34,11 +26,7 @@ void main() {
       final json = scope.toJson();
 
       expect(json['name'], 'active');
-      expect(
-        json.containsKey('parameters'),
-        isFalse,
-        reason: "La clé doit être absente",
-      );
+      expect(json.containsKey('parameters'), isFalse);
     });
   });
 
@@ -63,12 +51,8 @@ void main() {
 
       final filtersList = json['filters'] as List;
       expect(filtersList[0]['field'], 'role');
-      expect(
-        filtersList[0]['value'],
-        isNull,
-        reason: "Le null doit remonter jusqu'au JSON final",
-      );
       expect(filtersList[0].containsKey('value'), isTrue);
+      expect(filtersList[0]['value'], isNull);
     });
   });
 }

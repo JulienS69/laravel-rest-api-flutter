@@ -67,7 +67,7 @@ void main() {
     test('[200] Successful API call with valid JSON', () async {
       when(mockDio.post('/items/search')).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(),
+          requestOptions: RequestOptions(path: '/items/search'),
           statusCode: 200,
           data: {
             'data': [
@@ -82,12 +82,13 @@ void main() {
 
       expect(result.statusCode, 200);
       expect(result.data, isNotNull);
+      expect(result.data!.length, 2);
     });
 
     test('[200] Successful API call with bad JSON', () async {
       when(mockDio.post('/items/search')).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(),
+          requestOptions: RequestOptions(path: '/items/search'),
           statusCode: 200,
           data: {
             'data': [
@@ -107,7 +108,7 @@ void main() {
     test('[404] With common laravel error message', () async {
       when(mockDio.post('/items/search')).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(),
+          requestOptions: RequestOptions(path: '/items/search'),
           statusCode: 404,
           data: {
             "message": "Not Found",
@@ -126,10 +127,11 @@ void main() {
       expect(result.message, "Not Found");
     });
   });
+
   test('[500] With custom object error message returned', () async {
     when(mockDio.post('/items/search')).thenAnswer(
       (_) async => Response(
-        requestOptions: RequestOptions(),
+        requestOptions: RequestOptions(path: '/items/search'),
         statusCode: 500,
         data: {"error": "error"},
       ),
@@ -144,7 +146,7 @@ void main() {
   test('[500] With custom list error message returned', () async {
     when(mockDio.post('/items/search')).thenAnswer(
       (_) async => Response(
-        requestOptions: RequestOptions(),
+        requestOptions: RequestOptions(path: '/items/search'),
         statusCode: 500,
         data: [
           {"error": "error"},
@@ -160,12 +162,16 @@ void main() {
 
   test('Check if all attributes filter can be send in body', () async {
     when(mockDio.post('/items/search', data: anyNamed('data'))).thenAnswer(
-      (_) async => Response(requestOptions: RequestOptions(), statusCode: 200),
+      (_) async => Response(
+        requestOptions: RequestOptions(path: '/items/search'),
+        statusCode: 200,
+        data: {'data': []},
+      ),
     );
 
     await ItemRepositoryWithDefaultBody(mockDio).search(
       text: TextSearch(value: "my text search"),
-      filters: [Filter(field: "field", type: "type")],
+      filters: [Filter(field: "field", type: "type", value: null)],
       aggregates: [
         Aggregate(relation: "relation", type: "type", field: "field"),
       ],
@@ -174,13 +180,13 @@ void main() {
           relation: "relation",
           includes: [Include(relation: "relationIncludes")],
           selects: [Select(field: "relationField")],
-          filters: [Filter(field: "relationFilter")],
+          filters: [Filter(field: "relationFilter", value: null)],
         ),
       ],
       instructions: [
         Instruction(
           name: "name",
-          fields: [Field(name: "name", value: "value")],
+          fields: [InstructionField(field: "name", value: "value")],
         ),
       ],
       limit: 1,
@@ -190,7 +196,6 @@ void main() {
       sorts: [Sort(field: "field", direction: "direction")],
     );
 
-    // Check body send to api
     final capturedArgs = verify(
       mockDio.post('/items/search', data: captureAnyNamed('data')),
     ).captured;
@@ -206,21 +211,28 @@ void main() {
     expect(capturedArgs[0]["search"].containsKey('sorts'), isTrue);
     expect(capturedArgs[0]["search"].containsKey('limit'), isTrue);
     expect(capturedArgs[0]["search"].containsKey('page'), isTrue);
+
     expect(
-      capturedArgs[0]["search"]["includes"][0]["includes"][0]["relation"] ==
-          "relationIncludes",
-      capturedArgs[0]["search"]["includes"][0]["selects"][0]["field"] ==
-          "relationField",
+      capturedArgs[0]["search"]["includes"][0]["includes"][0]["relation"],
+      "relationIncludes",
     );
     expect(
-      capturedArgs[0]["search"]["includes"][0]["filters"][0]["field"] ==
-          "relationFilter",
-      isTrue,
+      capturedArgs[0]["search"]["includes"][0]["selects"][0]["field"],
+      "relationField",
+    );
+    expect(
+      capturedArgs[0]["search"]["includes"][0]["filters"][0]["field"],
+      "relationFilter",
     );
   });
+
   test('Check if defaultSearchBody is correctly send to api', () async {
     when(mockDio.post('/items/search', data: anyNamed('data'))).thenAnswer(
-      (_) async => Response(requestOptions: RequestOptions(), statusCode: 200),
+      (_) async => Response(
+        requestOptions: RequestOptions(path: '/items/search'),
+        statusCode: 200,
+        data: {'data': []},
+      ),
     );
 
     await ItemRepositoryWithDefaultBody(mockDio).search(
@@ -229,7 +241,6 @@ void main() {
       ],
     );
 
-    // Check body send to api
     final capturedArgs = verify(
       mockDio.post('/items/search', data: captureAnyNamed('data')),
     ).captured;

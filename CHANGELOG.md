@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.2.0
+
+### Added
+
+- Added `DetailsFactory` to retrieve a single resource with relations, gates and metadata
+- Added `RestoreFactory` to restore soft-deleted resources
+- Added `ForceDeleteFactory` to permanently delete resources
+- Added `LaravelRestApiDetailsResponse` to standardize details endpoint responses
+- Added missing factories to fully cover Laravel Rest API resource interactions
+
+### Fixed
+
+- Fixed nested mutation relations serialization to correctly group relations by table name
+- Prevented multiple relation operations from overwriting each other in mutate payloads
+- Fixed `page` parameter not being sent in search requests when `instructions` was null
+
+### Changed
+
+- Instruction fields now use `field` / `value` keys to match Laravel Rest API expectations
+- Actions requests now target the correct Lomkit endpoint format
+- Improved alignment of SDK payloads with Laravel Rest API documentation
+
+### Improved
+
+- Explicit `null` values are now preserved in search filters and instruction fields
+- Improved error handling consistency across search, actions, delete, restore and mutate factories
+- Updated and stabilized unit tests across all factories
+
+### Backward Compatibility
+
+- No breaking API changes
+- All changes are internal fixes or additive features only
+
 ## 0.1.2
 
 - Make filter value nullable

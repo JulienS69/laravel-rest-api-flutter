@@ -1,19 +1,25 @@
 class LaravelRestApiMutateBody {
-  List<Mutation> mutate;
+  final List<Mutation> mutate;
 
   LaravelRestApiMutateBody({required this.mutate});
 
-  Map<String, dynamic> toJson() {
-    return {"mutate": mutate.map((m) => m.toJson()).toList()};
-  }
+  Map<String, dynamic> toJson() => {
+    "mutate": mutate.map((m) => m.toJson()).toList(),
+  };
 }
 
+enum MutationOperation { create, update }
+
+enum RelationType { singleRelation, multipleRelation }
+
+enum MutationRelationOperation { create, update, attach, detach, toggle, sync }
+
 class Mutation {
-  bool? withoutDetaching;
-  List<MutationRelation>? relations;
-  MutationOperation operation;
-  Map<String, dynamic>? attributes;
-  dynamic key;
+  final MutationOperation operation;
+  final dynamic key;
+  final Map<String, dynamic>? attributes;
+  final bool? withoutDetaching;
+  final List<MutationRelation>? relations;
 
   Mutation({
     this.key,
@@ -32,62 +38,25 @@ class Mutation {
       if (attributes != null) 'attributes': attributes,
     };
 
-    if (relations?.isNotEmpty == true) {
-      map.addAll(getRelationsAsJson(relations!));
+    if (relations != null && relations!.isNotEmpty) {
+      map['relations'] = _relationsToGroupedJson(relations!);
     }
 
     return map;
   }
 }
 
-Map<String, dynamic> getRelationsAsJson(List<MutationRelation> relations) {
-  final relationsMap = <String, dynamic>{};
-  for (final relation in relations) {
-    final key = relation.table;
-    final value = relation.toJson();
-
-    switch (relation.relationType) {
-      case RelationType.singleRelation:
-        relationsMap[key] = value;
-        break;
-      case RelationType.multipleRelation:
-        relationsMap[key] = [value];
-        break;
-    }
-  }
-  return {'relations': relationsMap};
-}
-
-enum MutationOperation { create, update }
-
-/// Determines the **serialization format** of the relation in the API request.
-///
-/// - **`singleRelation`**:
-///   Used for 1:1 relationships (e.g., `belongsTo`, `hasOne`).
-///   → Generates a Map in JSON (e.g., `"star": { "operation": "detach", "key": 1 }`).
-///   Typical case: Only one operation possible (e.g., detaching a single related model).
-///
-/// - **`multipleRelation`**:
-///   Used for 1:N or N:N relationships (e.g., `hasMany`, `belongsToMany`).
-///   → Generates an Array of Maps (e.g., `"posts": [{ "operation": "sync", "key": 1 }]`).
-///   Typical case: Multiple operations on related models (e.g., syncing a list of posts).
-///
-/// **Choosing Rule**:
-/// Matches the **Eloquent relationship type** in Laravel.
-/// See [Laravel Eloquent Relationships](https://laravel.com/docs/10.x/eloquent-relationships).
-enum RelationType { singleRelation, multipleRelation }
-
-enum MutationRelationOperation { create, update, attach, detach, toggle, sync }
-
 class MutationRelation {
-  dynamic key;
-  String table;
-  bool? withoutDetaching;
-  RelationType relationType;
-  Map<String, dynamic>? pivot;
-  Map<String, dynamic>? attributes;
-  List<MutationRelation>? relations;
-  MutationRelationOperation operation;
+  final String table;
+  final MutationRelationOperation operation;
+  final RelationType relationType;
+
+  final dynamic key;
+  final Map<String, dynamic>? attributes;
+  final Map<String, dynamic>? pivot;
+  final bool? withoutDetaching;
+
+  final List<MutationRelation>? relations;
 
   MutationRelation({
     this.key,
@@ -105,10 +74,36 @@ class MutationRelation {
     return {
       'operation': operation.name,
       if (key != null) 'key': key,
-      if (pivot != null) 'pivot': pivot,
-      if (relations != null) 'relations': relations,
       if (attributes != null) 'attributes': attributes,
+      if (pivot != null) 'pivot': pivot,
       if (withoutDetaching != null) 'without_detaching': withoutDetaching,
+      if (relations != null && relations!.isNotEmpty)
+        'relations': _relationsToGroupedJson(relations!),
     };
   }
+}
+
+Map<String, dynamic> _relationsToGroupedJson(List<MutationRelation> relations) {
+  final map = <String, dynamic>{};
+
+  for (final r in relations) {
+    final key = r.table;
+    final value = r.toJson();
+
+    if (r.relationType == RelationType.singleRelation) {
+      map[key] = value;
+      continue;
+    }
+
+    final existing = map[key];
+    if (existing == null) {
+      map[key] = [value];
+    } else if (existing is List) {
+      existing.add(value);
+    } else {
+      map[key] = [existing, value];
+    }
+  }
+
+  return map;
 }

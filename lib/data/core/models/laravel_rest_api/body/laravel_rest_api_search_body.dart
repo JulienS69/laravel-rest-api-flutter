@@ -43,15 +43,36 @@ class LaravelRestApiSearchBody {
       if (limit != null) 'limit': limit,
     };
   }
+
+  Map<String, dynamic> toRequestJson() => {'search': toJson()};
+}
+
+enum TrashedMode { withTrashed, onlyTrashed, withoutTrashed }
+
+extension TrashedModeJson on TrashedMode {
+  String toJsonValue() {
+    switch (this) {
+      case TrashedMode.withTrashed:
+        return 'with';
+      case TrashedMode.onlyTrashed:
+        return 'only';
+      case TrashedMode.withoutTrashed:
+        return 'without';
+    }
+  }
 }
 
 class TextSearch {
   final String? value;
+  final TrashedMode? trashed;
 
-  TextSearch({this.value});
+  TextSearch({this.value, this.trashed});
 
   Map<String, dynamic> toJson() {
-    return {if (value != null) 'value': value};
+    return {
+      if (value != null) 'value': value,
+      if (trashed != null) 'trashed': trashed!.toJsonValue(),
+    };
   }
 }
 
@@ -79,7 +100,7 @@ class Filter {
     return {
       if (field != null) 'field': field,
       if (operator != null) 'operator': operator,
-      'value': value,
+      if (nested == null) 'value': value,
       if (type != null) 'type': type,
       if (nested != null) 'nested': nested!.map((e) => e.toJson()).toList(),
     };
@@ -90,11 +111,9 @@ class Sort {
   final String field;
   final String direction;
 
-  Sort({required this.field, required this.direction});
+  Sort({required this.field, this.direction = 'asc'});
 
-  Map<String, dynamic> toJson() {
-    return {'field': field, 'direction': direction};
-  }
+  Map<String, dynamic> toJson() => {'field': field, 'direction': direction};
 }
 
 class Select {
@@ -102,36 +121,55 @@ class Select {
 
   Select({required this.field});
 
-  Map<String, dynamic> toJson() {
-    return {'field': field};
-  }
+  Map<String, dynamic> toJson() => {'field': field};
 }
 
 class Include {
   final String relation;
-  final List<Include>? includes;
-  final List<Filter>? filters;
-  final List<Select>? selects;
+
+  final TextSearch? text;
   final List<Scope>? scopes;
+  final List<Filter>? filters;
+  final List<Sort>? sorts;
+  final List<Select>? selects;
+  final List<Include>? includes;
+  final List<Aggregate>? aggregates;
+  final List<Instruction>? instructions;
+  final List<String>? gates;
+  final int? page;
   final int? limit;
 
-  Include({
+  const Include({
     required this.relation,
-    this.includes,
-    this.filters,
-    this.selects,
+    this.text,
     this.scopes,
+    this.filters,
+    this.sorts,
+    this.selects,
+    this.includes,
+    this.aggregates,
+    this.instructions,
+    this.gates,
+    this.page,
     this.limit,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'relation': relation,
+      if (text != null) 'text': text!.toJson(),
+      if (scopes != null) 'scopes': scopes!.map((e) => e.toJson()).toList(),
+      if (filters != null) 'filters': filters!.map((e) => e.toJson()).toList(),
+      if (sorts != null) 'sorts': sorts!.map((e) => e.toJson()).toList(),
+      if (selects != null) 'selects': selects!.map((e) => e.toJson()).toList(),
       if (includes != null)
         'includes': includes!.map((e) => e.toJson()).toList(),
-      if (filters != null) 'filters': filters!.map((e) => e.toJson()).toList(),
-      if (selects != null) 'selects': selects!.map((e) => e.toJson()).toList(),
-      if (scopes != null) 'scopes': scopes!.map((e) => e.toJson()).toList(),
+      if (aggregates != null)
+        'aggregates': aggregates!.map((e) => e.toJson()).toList(),
+      if (instructions != null)
+        'instructions': instructions!.map((e) => e.toJson()).toList(),
+      if (gates != null) 'gates': gates,
+      if (page != null) 'page': page,
       if (limit != null) 'limit': limit,
     };
   }
@@ -141,12 +179,14 @@ class Aggregate {
   final String relation;
   final String type;
   final String field;
+  final String? alias;
   final List<Filter>? filters;
 
   Aggregate({
     required this.relation,
     required this.type,
     required this.field,
+    this.alias,
     this.filters,
   });
 
@@ -155,6 +195,7 @@ class Aggregate {
       'relation': relation,
       'type': type,
       'field': field,
+      if (alias != null) 'alias': alias,
       if (filters != null) 'filters': filters!.map((e) => e.toJson()).toList(),
     };
   }
@@ -162,7 +203,7 @@ class Aggregate {
 
 class Instruction {
   final String name;
-  final List<Field> fields;
+  final List<InstructionField> fields;
 
   Instruction({required this.name, required this.fields});
 
@@ -171,13 +212,11 @@ class Instruction {
   }
 }
 
-class Field {
-  final String name;
+class InstructionField {
+  final String field;
   final dynamic value;
 
-  Field({required this.name, required this.value});
+  const InstructionField({required this.field, required this.value});
 
-  Map<String, dynamic> toJson() {
-    return {'name': name, 'value': value};
-  }
+  Map<String, dynamic> toJson() => {'field': field, 'value': value};
 }

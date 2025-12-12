@@ -2,22 +2,19 @@ import 'package:laravel_rest_api_flutter/data/core/http_client/rest_api_http_cli
 import 'package:laravel_rest_api_flutter/data/core/models/laravel_rest_api/body/laravel_rest_api_actions_body.dart';
 import '../../rest_api_repository.dart';
 
-/// A mixin to simplify building search requests for Laravel Rest API.
 mixin ActionsFactory {
-  /// The base route for the resource (e.g., '/posts').
   String get baseRoute;
-
-  /// The HTTP client used to send requests. Typically a Dio instance.
   RestApiClient get httpClient;
 
   Future<RestApiResponse<int>> actions({
+    required String actionUriKey,
     required LaravelRestApiActionsBody data,
     Map<String, String>? headers,
   }) async {
-    late RestApiResponse response;
+    RestApiResponse? response;
     try {
       response = await handlingResponse(
-        baseRoute,
+        '$baseRoute/actions/$actionUriKey',
         headers: headers,
         apiMethod: ApiMethod.post,
         client: httpClient,
@@ -26,10 +23,15 @@ mixin ActionsFactory {
       return RestApiResponse<int>(
         statusCode: response.statusCode,
         body: response.body,
-        data: response.body?['data']['impacted'] ?? 0,
+        data: response.body?['data']?['impacted'] ?? 0,
+        message: response.message,
+        headers: response.headers,
       );
     } catch (exception) {
-      return RestApiResponse<int>(message: response.message, statusCode: 500);
+      return RestApiResponse<int>(
+        message: response?.message ?? exception.toString(),
+        statusCode: 500,
+      );
     }
   }
 }

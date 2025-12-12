@@ -30,7 +30,7 @@ void main() {
     test('[200] Successful API call with valid JSON', () async {
       when(
         mockDio.post(
-          '/items',
+          '/items/actions/expire-items',
           data: {
             "fields": [
               {"name": "expires_at", "value": "2023-04-29"},
@@ -39,7 +39,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(),
+          requestOptions: RequestOptions(path: '/items/actions/expire-items'),
           statusCode: 200,
           data: {
             "data": {"impacted": 10},
@@ -48,18 +48,20 @@ void main() {
       );
 
       final result = await ItemRepository(mockDio).actions(
+        actionUriKey: 'expire-items',
         data: LaravelRestApiActionsBody(
           fields: [Action(name: "expires_at", value: "2023-04-29")],
         ),
       );
 
+      expect(result.statusCode, 200);
       expect(result.data, 10);
     });
 
     test('[500] With common laravel error message', () async {
       when(
         mockDio.post(
-          '/items',
+          '/items/actions/expire-items',
           data: {
             "fields": [
               {"name": "expires_at", "value": "2023-04-29"},
@@ -68,7 +70,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(),
+          requestOptions: RequestOptions(path: '/items/actions/expire-items'),
           statusCode: 500,
           data: {
             "message": "Server error",
@@ -82,6 +84,7 @@ void main() {
       );
 
       final result = await ItemRepository(mockDio).actions(
+        actionUriKey: 'expire-items',
         data: LaravelRestApiActionsBody(
           fields: [Action(name: "expires_at", value: "2023-04-29")],
         ),
